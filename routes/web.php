@@ -13,6 +13,11 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+// Cron trigger endpoint just in case the host does not support cron
+Route::get('/scheduler', function () {
+    Artisan::call('schedule:run');
+});
+
 Route::get('/test', 'MainController@test')->name('test');
 
 Route::get('/invoice/view', 'InvoiceController@showwithtoken')->name('invoice.token');
