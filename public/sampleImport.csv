@@ -1,0 +1,3 @@
+companyname,nickname,crn,phone,block,street,unitnumber,postalcode,country_code,website,contactsalutation,contactfirstname,contactlastname,contactphone,contactemail
+Company 1,C1,1234,0423456789,,,,,,sub1.example.com,mr,firstname,lastname,0423456789,anotheremail@example.com
+Company 2,C2,1235,0433456789,,,,,,sub1.example.com,mr,firstname,lastname,0433456789,anotheremail@example.com

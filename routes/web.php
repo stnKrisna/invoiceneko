@@ -209,6 +209,12 @@ Route::group(['middleware' => ['auth', '2fa', 'verified']], function () {
             Route::get('/clients', 'ClientController@index')
                 ->name('client.index')
                 ->middleware('can:index, App\Models\Client');
+            Route::get('/client/import', 'ClientImportController@create')
+                ->name('client.import')
+                ->middleware('can:create, App\Models\Client');
+            Route::post('/client/import', 'ClientImportController@store')
+                ->name('client.import.store')
+                ->middleware('can:create, App\Models\Client');
             Route::get('/client/create', 'ClientController@create')
                 ->name('client.create')
                 ->middleware('can:create, App\Models\Client');

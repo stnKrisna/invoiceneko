@@ -16,6 +16,10 @@
                 @can('create', \App\Models\Client::class)
                 <a href="{{ route('client.create', [ 'company' => \App\Library\Poowf\Unicorn::getCompanyKey() ]) }}" class="btn btn-link waves-effect waves-dark">Create</a>
                 @endcan
+                
+                @can('create', \App\Models\Client::class)
+                <a href="{{ route('client.import', [ 'company' => \App\Library\Poowf\Unicorn::getCompanyKey() ]) }}" class="btn btn-link waves-effect waves-dark">Import</a>
+                @endcan
             </div>
         </div>
         <div class="row">
