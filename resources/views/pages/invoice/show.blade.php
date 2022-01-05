@@ -45,10 +45,10 @@
                     @endcan
                 @endcan
                 @can('update', $invoice)
-                <form method="post" action="{{ route('invoice.convert', [ 'invoice' => $invoice, 'company' => \App\Library\Poowf\Unicorn::getCompanyKey() ] ) }}" class="null-form">
+{{--                <form method="post" action="{{ route('invoice.convert', [ 'invoice' => $invoice, 'company' => \App\Library\Poowf\Unicorn::getCompanyKey() ] ) }}" class="null-form">
                     {{ csrf_field() }}
                     <button class="btn btn-link waves-effect waves-dark null-btn" type="submit">Convert back to Quote</button>
-                </form>
+                </form> --}}
                 @endcan
                 @can('update', $invoice)
                 <form method="post" action="{{ route('invoice.duplicate', [ 'invoice' => $invoice, 'company' => \App\Library\Poowf\Unicorn::getCompanyKey() ] ) }}" class="null-form">

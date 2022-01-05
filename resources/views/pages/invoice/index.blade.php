@@ -15,7 +15,7 @@
             <div class="col s6 right mtop30">
                 @can('create', \App\Models\Invoice::class)
                 <a href="{{ route('invoice.create', [ 'company' => \App\Library\Poowf\Unicorn::getCompanyKey() ]) }}" class="btn btn-link waves-effect waves-dark">Create</a>
-                <a href="{{ route('invoice.adhoc.create', [ 'company' => \App\Library\Poowf\Unicorn::getCompanyKey() ]) }}" class="btn btn-link waves-effect waves-dark">Create Ad-Hoc</a>
+                {{-- <a href="{{ route('invoice.adhoc.create', [ 'company' => \App\Library\Poowf\Unicorn::getCompanyKey() ]) }}" class="btn btn-link waves-effect waves-dark">Create Ad-Hoc</a> --}}
                 @endcan
                 @can('index', \App\Models\Receipt::class)
                     <a href="{{ route('receipt.index', [ 'company' => \App\Library\Poowf\Unicorn::getCompanyKey() ]) }}" class="btn btn-link waves-effect waves-dark">Receipts</a>
