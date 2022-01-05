@@ -106,7 +106,10 @@ Route::group(['middleware' => ['auth', '2fa', 'verified']], function () {
             ->middleware('can:owner,company');
 
         Route::group(['middleware' => ['hascompany']], function () {
-            Route::get('/dashboard', 'MainController@dashboard')->name('dashboard');
+            // Route::get('/dashboard', 'MainController@dashboard')->name('dashboard');
+            Route::get('/dashboard', function ($company) {
+                return redirect('/' . $company->domain_name . '/clients');
+            })->name('dashboard');
 
             Route::get('/user/{user}/retrieve', 'UserController@retrieve')
                 ->name('user.retrieve')
