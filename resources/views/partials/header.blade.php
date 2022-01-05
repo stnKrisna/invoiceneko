@@ -13,19 +13,19 @@
                             <ul class="right hide-on-med-and-down">
                                 @if(Auth::check())
                                     @if(app('request')->route('company'))
-                                    <li><a href="{{ route('dashboard', [ 'company' => \App\Library\Poowf\Unicorn::getCompanyKey() ]) }}">Dashboard</a></li>
+                                    {{-- <li><a href="{{ route('dashboard', [ 'company' => \App\Library\Poowf\Unicorn::getCompanyKey() ]) }}">Dashboard</a></li>
                                     @can('index', \App\Models\Quote::class)
                                     <li><a href="{{ route('quote.index', [ 'company' => \App\Library\Poowf\Unicorn::getCompanyKey() ]) }}">Quotes</a></li>
-                                    @endcan
+                                    @endcan --}}
                                     @can('index', \App\Models\Invoice::class)
                                     <li><a href="{{ route('invoice.index', [ 'company' => \App\Library\Poowf\Unicorn::getCompanyKey() ]) }}">Invoices</a></li>
                                     @endcan
                                     @can('index', \App\Models\Client::class)
                                     <li><a href="{{ route('client.index', [ 'company' => \App\Library\Poowf\Unicorn::getCompanyKey() ]) }}">Clients</a></li>
                                     @endcan
-                                    @can('index', \App\Models\Payment::class)
+                                    {{-- @can('index', \App\Models\Payment::class)
                                     <li><a href="{{ route('payment.index', [ 'company' => \App\Library\Poowf\Unicorn::getCompanyKey() ]) }}">Payments</a></li>
-                                    @endcan
+                                    @endcan --}}
                                     @endif
                                     <li>
                                         <a class="btn btn-link btn-floating waves-effect waves-dark company-selector-btn dropdown-trigger" href="javascript:;" data-target="company-dropdown-navigation"><i class="mdi mdi-office-building"></i></a>
@@ -65,10 +65,12 @@
                                         </li>
                                     </ul>
                                 @else
-                                    <li><a href="{{ route('pricing') }}">Pricing</a></li>
-                                    <li><a href="{{ route('features') }}">Features</a></li>
+                                    {{-- <li><a href="{{ route('pricing') }}">Pricing</a></li>
+                                    <li><a href="{{ route('features') }}">Features</a></li> --}}
                                     <li><a href="{{ route('auth.show') }}">Sign In</a></li>
+                                    @if(env('ENABLE_REGISTER', true))
                                     <li><a href="{{ route('start') }}" class="btn btn-link">Start Here</a></li>
+                                    @endif
                                 @endif
                             </ul>
                             <ul class="sidenav" id="mobile-menu">
