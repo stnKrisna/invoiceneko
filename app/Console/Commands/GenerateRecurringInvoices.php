@@ -11,6 +11,7 @@ use Illuminate\Console\Command;
 use Recurr\Rule;
 use Recurr\Transformer\ArrayTransformer;
 use Recurr\Transformer\Constraint\BeforeConstraint;
+use App\Models\DatabaseConfig;
 
 class GenerateRecurringInvoices extends Command
 {
@@ -56,6 +57,21 @@ class GenerateRecurringInvoices extends Command
             $template = $invoiceRecurrence->template;
             $templateItems = $template->items;
 
+            $notificationDatePreDate = [
+                'weeklyInvoice' => 7,
+                'monthlyInvoice' => 7,
+                'yearlyInvoice' => 30,
+            ];
+
+            $notifBeforeDaysConfig = DatabaseConfig::whereIn('key', ['weeklyInvoice', 'monthlyInvoice', 'yearlyInvoice'])
+                ->where('company_id', '=', $company->id)
+                ->get();
+            if ($notifBeforeDaysConfig->count() != 0) {
+                foreach ($notifBeforeDaysConfig as $dbConfigKeyVal) {
+                    $notificationDatePreDate[$dbConfigKeyVal->key] = (int) $dbConfigKeyVal->value;
+                }
+            }
+
             $constraintTime = $now->{$this->getDateAdditionOperator($invoiceRecurrence->time_period)}(
                 $invoiceRecurrence->time_interval + 3,
             );
@@ -66,6 +82,22 @@ class GenerateRecurringInvoices extends Command
             $transformer = new ArrayTransformer();
 
             $recurrences = $transformer->transform($rrule, $constraint);
+
+            $backdate = 0;
+
+            switch ($invoiceRecurrence->time_period) {
+                case 'week':
+                    $backdate = $notificationDatePreDate['weeklyInvoice'];
+                    break;
+                case 'month':
+                    $backdate = $notificationDatePreDate['monthlyInvoice'];
+                    break;
+                case 'year':
+                    $backdate = $notificationDatePreDate['yearlyInvoice'];
+                    break;
+                default:
+                    $backdate = 0;
+            }
 
             foreach ($recurrences as $key => $recurrence) {
                 if ($key == 0) {
@@ -85,6 +117,7 @@ class GenerateRecurringInvoices extends Command
                 $generatedInvoice->invoice_recurrence_id = $invoiceRecurrence->id;
                 $generatedInvoice->status = Invoice::STATUS_DRAFT;
                 $generatedInvoice->notify = $template->notify;
+                $generatedInvoice->notification_date = (new Carbon($recurrence->getEnd()))->subDays($backdate);
 
                 //Generate hash based on the serialized version of the invoice;
                 //Only retrieve the invoice data without any relations

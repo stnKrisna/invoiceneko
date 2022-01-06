@@ -410,6 +410,19 @@ class Invoice extends Model implements Auditable
         return $query->whereBetween('date', [$startDate, $endDate]);
     }
 
+    public function scopeNotificationDateBetween($query, $startDate, $endDate)
+    {
+        return $query->where(function ($query) use ($startDate, $endDate) {
+            return $query
+                ->where(function ($query) use ($startDate, $endDate) {
+                    return $query->whereNull('notification_date')->whereBetween('date', [$startDate, $endDate]);
+                })
+                ->orWhere(function ($query) use ($startDate, $endDate) {
+                    return $query->whereNotNull('notification_date')->whereBetween('notification_date', [$startDate, $endDate]);
+                });
+        });
+    }
+
     public function scopeNotifiable($query)
     {
         return $query->where('notify', true);
