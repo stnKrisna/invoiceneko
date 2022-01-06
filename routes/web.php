@@ -253,6 +253,9 @@ Route::group(['middleware' => ['auth', '2fa', 'verified']], function () {
                 ->middleware('can:delete,invoiceitem');
 
             /* Invoice */
+            Route::get('/calendar', 'InvoiceController@calendarView')
+                ->name('invoice.calendarView')
+                ->middleware('can:index, App\Models\Invoice');
             Route::get('/invoices', 'InvoiceController@index')
                 ->name('invoice.index')
                 ->middleware('can:index, App\Models\Invoice');

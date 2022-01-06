@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CreateInvoiceRequest;
 use App\Http\Requests\UpdateInvoiceRequest;
 use App\Library\Poowf\Unicorn;
+use App\Models\Client;
 use App\Models\Company;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
@@ -20,6 +21,10 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
+use Recurr\Rule;
+use Recurr\Transformer\ArrayTransformer;
+use Recurr\Transformer\Constraint\BeforeConstraint;
+use Acaronlex\LaravelCalendar\Calendar;
 
 class InvoiceController extends Controller
 {
@@ -62,6 +67,90 @@ class InvoiceController extends Controller
             ->get();
 
         return view('pages.invoice.index', compact('overdue', 'pending', 'draft', 'paid'));
+    }
+
+    public function getDateAdditionOperator($timePeriod)
+    {
+        switch ($timePeriod) {
+            case 'day':
+                return 'addDays';
+                break;
+            case 'week':
+                return 'addWeeks';
+                break;
+            case 'month':
+                return 'addMonths';
+                break;
+            case 'year':
+                return 'addYears';
+                break;
+        }
+    }
+
+    public function calendarView(Company $company)
+    {
+        $invoiceRecurrences = InvoiceRecurrence::all();
+        $calendar = new Calendar();
+        $calendar->setOptions([
+            // 'plugins' => [ 'window.interaction', 'window.momentPlugin', 'window.dayGridPlugin', 'window.timeGridPlugin', 'window.listPlugin' ],
+            // 'locales' => 'window.allLocales',
+            'locale' => 'en-au',
+            'firstDay' => 0,
+            'displayEventTime' => true,
+            'selectable' => true,
+            'initialView' => 'dayGridMonth',
+            'headerToolbar' => [
+                'left' => 'prev,next today',
+                'center' => 'title',
+                'right' => 'dayGridMonth',
+            ],
+        ]);
+        $calendar->setCallbacks([
+            'select' => 'function(info) {}',
+            'eventClick' => 'function(info) {}',
+            'dateClick' => 'function(info) {}',
+        ]);
+
+        foreach ($invoiceRecurrences as $invoiceRecurrence) {
+            $company = $invoiceRecurrence->company;
+            $now = Carbon::now();
+            $template = $invoiceRecurrence->template;
+            $templateItems = $template->items;
+            $client = Client::where('id', '=', $template->client_id)->first();
+
+            $constraintTime = $now->{$this->getDateAdditionOperator($invoiceRecurrence->time_period)}(
+                $invoiceRecurrence->time_interval + 4,
+            );
+            $constraint = new BeforeConstraint($constraintTime);
+
+            //            $rrule = Unicorn::generateRrule($invoiceRecurrence->created_at, $timezone, $invoiceRecurrence->time_interval, $invoiceRecurrence->time_period, $invoiceRecurrence->until_type, $invoiceRecurrence->until_meta, true);
+            $rrule = Rule::createFromString($invoiceRecurrence->rule, $template->date);
+            $transformer = new ArrayTransformer();
+
+            $recurrences = $transformer->transform($rrule, $constraint);
+
+            $events = [];
+            foreach ($recurrences as $key => $recurrence) {
+                if ($key == 0) {
+                    //Skip the first instance as it is the original invoice.
+                    continue;
+                }
+
+                $events[] = Calendar::event(
+                    'Payment due for ' . $client->nickname,
+                    true,
+                    $recurrence->getEnd(),
+                    $recurrence->getEnd(),
+                    $invoiceRecurrence->id . '-' . $key,
+                    [
+                        'url' => url($company->domain_name . '/client/' . $template->client_id),
+                    ],
+                );
+            }
+            $calendar->addEvents($events);
+        }
+
+        return view('pages.invoice.calendarView', compact('calendar'));
     }
 
     /**

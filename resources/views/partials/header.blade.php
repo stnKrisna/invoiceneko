@@ -18,6 +18,7 @@
                                     <li><a href="{{ route('quote.index', [ 'company' => \App\Library\Poowf\Unicorn::getCompanyKey() ]) }}">Quotes</a></li>
                                     @endcan --}}
                                     @can('index', \App\Models\Invoice::class)
+                                    <li><a href="{{ route('invoice.calendarView', [ 'company' => \App\Library\Poowf\Unicorn::getCompanyKey() ]) }}">Calendar</a></li>
                                     <li><a href="{{ route('invoice.index', [ 'company' => \App\Library\Poowf\Unicorn::getCompanyKey() ]) }}">Invoices</a></li>
                                     @endcan
                                     @can('index', \App\Models\Client::class)
@@ -109,18 +110,12 @@
                                     </ul>
                                 </li>
                                     @if(app('request')->route('company'))
-                                    <li><a href="{{ route('dashboard', [ 'company' => \App\Library\Poowf\Unicorn::getCompanyKey() ]) }}">Dashboard</a></li>
-                                    @can('index', \App\Models\Quote::class)
-                                    <li><a href="{{ route('quote.index', [ 'company' => \App\Library\Poowf\Unicorn::getCompanyKey() ]) }}">Quotes</a></li>
-                                    @endcan
                                     @can('index', \App\Models\Invoice::class)
+                                    <li><a href="{{ route('invoice.calendarView', [ 'company' => \App\Library\Poowf\Unicorn::getCompanyKey() ]) }}">Calendar</a></li>
                                     <li><a href="{{ route('invoice.index', [ 'company' => \App\Library\Poowf\Unicorn::getCompanyKey() ]) }}">Invoices</a></li>
                                     @endcan
                                     @can('index', \App\Models\Client::class)
                                     <li><a href="{{ route('client.index', [ 'company' => \App\Library\Poowf\Unicorn::getCompanyKey() ]) }}">Clients</a></li>
-                                    @endcan
-                                    @can('index', \App\Models\Payment::class)
-                                    <li><a href="{{ route('payment.index', [ 'company' => \App\Library\Poowf\Unicorn::getCompanyKey() ]) }}">Payments</a></li>
                                     @endcan
                                     @endif
                                     <li>
@@ -144,10 +139,10 @@
                                         </li>
                                     </ul>
                                 @else
+                                    @if(env('ENABLE_REGISTER', true))
                                     <li><a href="{{ route('start') }}" class="btn btn-link">Start Here</a></li>
+                                    @endif
                                     <li><a href="{{ route('auth.show') }}">Sign In</a></li>
-                                    <li><a href="{{ route('pricing') }}">Pricing</a></li>
-                                    <li><a href="{{ route('features') }}">Features</a></li>
                                 @endif
                             </ul>
                         </div>
