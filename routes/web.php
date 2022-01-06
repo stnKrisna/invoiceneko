@@ -141,6 +141,13 @@ Route::group(['middleware' => ['auth', '2fa', 'verified']], function () {
                 ->name('company.access.revoke')
                 ->middleware('can:owner,company');
 
+            Route::get('/company/notification', 'CompanyNotificationController@edit')
+                ->name('company.notification.edit')
+                ->middleware('can:owner,company');
+            Route::patch('/company/notification', 'CompanyNotificationController@store')
+                ->name('company.notification.store')
+                ->middleware('can:owner,company');
+
             /* CompanyAddress */
             Route::get('/company/address/edit', 'CompanyAddressController@edit')
                 ->name('company.address.edit')

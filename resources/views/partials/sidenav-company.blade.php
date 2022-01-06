@@ -25,6 +25,9 @@
             @can('owner', app('request')->route('company'))
             <a href="{{ route('company.requests.index', [ 'company' => \App\Library\Poowf\Unicorn::getCompanyKey() ]) }}" class="collection-item {{ Ekko::isActiveRoute('company.requests.*') }}">Requests</a>
             @endcan
+            @can('owner', app('request')->route('company'))
+            <a href="{{ route('company.notification.edit', [ 'company' => \App\Library\Poowf\Unicorn::getCompanyKey() ]) }}" class="collection-item {{ Ekko::isActiveRoute('company.notification.*') }}">Notification</a>
+            @endcan
         @endif
         {{--<a href="{{ route('migration.create') }}" class="collection-item {{ Ekko::isActiveRoute('migration.create') }}">Data Migration</a>--}}
     </div>
