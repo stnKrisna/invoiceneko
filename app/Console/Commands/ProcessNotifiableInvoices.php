@@ -48,7 +48,7 @@ class ProcessNotifiableInvoices extends Command
         foreach ($invoices as $invoice) {
             $company = $invoice->company;
             $localDate = Carbon::now($company->timezone);
-            $localInvoiceDate = $invoice->date;
+            $localInvoiceDate = $invoice->notification_date ?? $invoice->date;
 
             if (date_diff($localDate, $localInvoiceDate)->format('%a') === '0') {
                 if ($invoice->status = Invoice::STATUS_DRAFT) {

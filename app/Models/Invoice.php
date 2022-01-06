@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\Mail;
 use OwenIt\Auditing\Contracts\Auditable;
 use PDF;
 use Uuid;
+use DatabaseConfig;
+use Recipient;
+use Illuminate\Support\Str;
 
 class Invoice extends Model implements Auditable
 {
@@ -88,7 +91,29 @@ class Invoice extends Model implements Auditable
      */
     public function routeNotificationForMail($notification)
     {
-        return $this->client->recipients;
+        $mailTo = \App\Models\DatabaseConfig::where('key', '=', 'notifRecipientAddress')
+            ->where('company_id', '=', $this->company->id)
+            ->first();
+
+        // Return if we cant find the config for the notification email or isnt a valid email
+        if ($mailTo == null || !Str::contains($mailTo->value, '@')) {
+            return '';
+        }
+
+        // $recipient = new \App\Models\Recipient();
+        // $recipient->id = 0;
+        // $recipient->salutation = '';
+        // $recipient->first_name = '';
+        // $recipient->last_name = '';
+        // $recipient->email = $mailTo->value;
+        // $recipient->phone = '';
+        // $recipient->recipientable_id = 0;
+        // $recipient->recipientable_type = 'App\Models\Client';
+        // $recipient->company_id = $this->company->id;
+
+        // return $recipient;
+        return $mailTo->value;
+        // return $this->client->recipients;
     }
 
     public function getTotalMoneyFormatAttribute()
@@ -400,8 +425,17 @@ class Invoice extends Model implements Auditable
 
     public function sendEmailNotification()
     {
-        Mail::to($this->client->contactemail)
-            ->cc($this->company->owner->email)
+        $mailTo = DatabaseConfig::where('key', '=', 'notifRecipientAddress')
+            ->where('company_id', '=', $this->company->id)
+            ->first();
+
+        // Return if we cant find the config for the notification email or isnt a valid email
+        if ($mailTo == null || !Str::contains($mailTo->value, '@')) {
+            return;
+        }
+
+        Mail::to($mailTo->value)
+            // ->cc($this->company->owner->email)
             ->send(new InvoiceMail($this));
     }
 

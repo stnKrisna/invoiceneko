@@ -7,6 +7,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Str;
+use App\Models\DatabaseConfig;
 
 class InvoiceNotification extends Notification implements ShouldQueue
 {
@@ -48,21 +49,31 @@ class InvoiceNotification extends Notification implements ShouldQueue
         $invoice = $this->invoice;
         $company = $invoice->company;
         $client = $invoice->getClient();
-        $pdf = $invoice->generatePDFView();
+        // $pdf = $invoice->generatePDFView();
         //Cast to string to ensure only a string is returned
         $token = (string) $invoice->generateShareToken();
         $url = route('invoice.token', ['token' => $token]);
         $pixelRoute = route('notification.pixel', ['notification_id' => $this->id]);
         $invoice_slug = Str::slug($invoice->nice_invoice_id) . '.pdf';
 
+        $mailTo = DatabaseConfig::where('key', '=', 'notifRecipientAddress')
+            ->where('company_id', '=', $this->invoice->company_id)
+            ->first();
+        $email = '';
+
+        // Return if we cant find the config for the notification email or isnt a valid email
+        if ($mailTo != null && Str::contains($mailTo->value, '@')) {
+            $email = $mailTo->value;
+        }
+
         return (new NekoMailMessage())
-            ->subject("New Invoice #{$invoice->nice_invoice_id} from {$company->name}")
+            ->subject("Renewal for {$client->companyname} ({$client->nickname})")
             ->greeting("Hello {$client->companyname}!")
-            ->line("You have a new Invoice from {$company->name}")
+            ->line("You have a renewal for {$client->companyname} ({$client->nickname})")
             ->action('View Invoice', $url)
-            ->line('Thank you for using our application!')
-            ->content('<img src="' . $pixelRoute . '">')
-            ->attachData($pdf->inline($invoice_slug), $invoice_slug);
+            // ->line('Thank you for using our application!')
+            ->content('<img src="' . $pixelRoute . '">');
+        // ->attachData($pdf->inline($invoice_slug), $invoice_slug);
     }
 
     /**
@@ -74,12 +85,22 @@ class InvoiceNotification extends Notification implements ShouldQueue
      */
     public function toArray($notifiable)
     {
+        $mailTo = DatabaseConfig::where('key', '=', 'notifRecipientAddress')
+            ->where('company_id', '=', $this->invoice->company_id)
+            ->first();
+        $email = '';
+
+        // Return if we cant find the config for the notification email or isnt a valid email
+        if ($mailTo != null && Str::contains($mailTo->value, '@')) {
+            $email = $mailTo->value;
+        }
+
         return [
             'invoice_id' => $this->invoice->id,
             'nice_invoice_id' => $this->invoice->nice_invoice_id,
             'company_id' => $this->invoice->company_id,
             'clientname' => $this->invoice->client->companyname,
-            'email' => $this->invoice->client->contactemail,
+            'email' => $email,
         ];
     }
 }
