@@ -107,7 +107,69 @@ class InvoiceController extends Controller
         ]);
         $calendar->setCallbacks([
             'select' => 'function(info) {}',
-            'eventClick' => 'function(info) {}',
+            'eventClick' => 'function(info) {
+                const invoiceItemForEmailSubject = function (invoice) {
+                    const invoiceItems = invoice.items
+
+                    if (invoiceItems.length == 1)
+                        return invoiceItems[0].itemName
+                    return "Multiple items"
+                }
+
+                const invoiceItemStringify = function (invoiceItems) {
+                    let ret = ""
+                    invoiceItems.forEach(function (curValue) {
+                        console.log(curValue)
+                        let retString = "\n - "
+
+                        retString += curValue.itemQuantity + "x "
+                        retString += curValue.itemName + "@ $"
+                        retString += curValue.price + " (total: $"
+                        retString += (curValue.price * curValue.itemQuantity) + ")"
+
+                        ret += retString
+                    })
+
+                    return ret
+                }
+
+                const emailBodyGenerator = function (invoice) {
+                    const clientCode = ["Client", invoice.clientCode]
+                    const clientName = ["Client Name", invoice.clientName]
+                    const nextRenewal = ["Next Renewal Date", info.event.startStr]
+                    const renewalTerm = ["Renewal Term", invoice.renewalInterval + " " + invoice.renewalPeriod]
+                    const lastInvoice = ["Last Invoice #", invoice.prevInvoice]
+
+                    const itemsText = ["Items", invoiceItemStringify(invoice.items)]
+                    console.log(itemsText)
+
+                    const bodyItemOrder = [
+                        clientCode,
+                        clientName,
+                        renewalTerm,
+                        nextRenewal,
+                        lastInvoice,
+                        itemsText
+                    ]
+
+                    let ret = ""
+                    bodyItemOrder.forEach(function (curVal) {
+                        const retNewline = ret.length != 0
+                          ? "\n"
+                          : ""
+
+                        ret += retNewline + curVal.join(": ")
+                    })
+                    return ret
+                }
+
+                console.log(info.event.extendedProps)
+                const invoice = info.event.extendedProps
+                const emailBodyStr = emailBodyGenerator(invoice)
+                let subject = "Renewal: " + invoiceItemForEmailSubject(invoice) + " (" + invoice.clientCode + ")"
+
+                window.location.href = "mailto:?subject=" + subject + "&body=" + encodeURIComponent(emailBodyStr)
+            }',
             'dateClick' => 'function(info) {}',
         ]);
 
@@ -130,11 +192,28 @@ class InvoiceController extends Controller
             $recurrences = $transformer->transform($rrule, $constraint);
 
             $events = [];
+            $invoiceItems = [];
+            // dd($template->items);
+
+            // Cache all items in the invoice
+            foreach ($template->items as $invoiceItem) {
+                $invoiceItems[] = [
+                    'itemName' => $invoiceItem->name,
+                    'itemQuantity' => $invoiceItem->quantity,
+                    'price' => $invoiceItem->price,
+                ];
+            }
+
             foreach ($recurrences as $key => $recurrence) {
                 if ($key == 0) {
                     //Skip the first instance as it is the original invoice.
                     continue;
                 }
+
+                // Find previous invoice
+                $prevInvoice = Invoice::where('date', '<', $recurrence->getEnd())
+                    ->orderBy('date', 'desc')
+                    ->first();
 
                 $events[] = Calendar::event(
                     'Payment due for ' . $client->nickname,
@@ -143,7 +222,13 @@ class InvoiceController extends Controller
                     $recurrence->getEnd(),
                     $invoiceRecurrence->id . '-' . $key,
                     [
-                        'url' => url($company->domain_name . '/client/' . $template->client_id),
+                        // 'url' => url($company->domain_name . '/client/' . $template->client_id),
+                        'clientName' => $client->companyname,
+                        'clientCode' => $client->nickname,
+                        'items' => $invoiceItems,
+                        'prevInvoice' => $prevInvoice == null ? '' : $prevInvoice->nice_invoice_id,
+                        'renewalPeriod' => $invoiceRecurrence->time_period,
+                        'renewalInterval' => $invoiceRecurrence->time_interval,
                     ],
                 );
             }
